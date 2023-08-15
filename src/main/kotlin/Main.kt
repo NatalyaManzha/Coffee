@@ -1,3 +1,4 @@
+import java.util.*
 import kotlin.system.exitProcess
 
 class CoffeeMachine {
@@ -5,13 +6,13 @@ class CoffeeMachine {
     private var water: Int = 0
     private var milk: Int = 0
     private var beans: Int = 0
-    private var command: String = " "
+    private var scanner = Scanner (System.`in`)
 
     enum class Text (val text: String) {
-        REQUEST_1("Введите команду"),
-        MISTAKE_1("Ошибка. Введите корректную команду"),
-        REQUEST_2("Введите название напитка или \"назад\" для возврата в главное меню"),
-        MISTAKE_2("Рецепт не найден!");
+        ENTER_COMMAND_MESSAGE_1("Введите команду"),
+        MESSAGE_IN_CASE_OF_ERROR_1("Ошибка. Введите корректную команду"),
+        ENTER_COMMAND_MESSAGE_2("Введите название напитка или \"назад\" для возврата в главное меню"),
+        MESSAGE_IN_CASE_OF_ERROR_2("Рецепт не найден!");
     }
 
     private val commandMainMenu = listOf(
@@ -46,33 +47,32 @@ class CoffeeMachine {
     }
 
     private fun getCommand(
-        request: Text,
-        mistake: Text,
+        enterCommandMessage: Text,
+        messageInCaseOfError: Text,
         commandMenu: List<String>
     ): String {
-        println(request.text)
-        val scanner = readlnOrNull()
-        if (scanner!!.lowercase() in commandMenu) {
-            command = scanner.lowercase()}
-        else {
-            println(mistake.text)
+        var command = " "
+        while (command !in commandMenu) {
+                println(enterCommandMessage.text) //запрос ввода
+                scanner = Scanner(System.`in`) //считываем ввод
+                if (scanner.hasNextLine()) { //если это строка
+                    command = (scanner.next()).lowercase() //присваиваем ее значение переменной
+                    if (command !in commandMenu) { //проверяем, есть ли такая команда
+                    println(messageInCaseOfError.text) //если нет - сообщение об ошибке и продолжаем цикл
+                    } //если есть, выходим из цикла while
+                } else { //если не строка - выводим ошибку и продолжаем цикл
+                    println(messageInCaseOfError.text)
+                }
         }
-        return command
+        return command //возвращаем команду
     }
 
     private fun goToMainMenu() {
-        command = " "
-        while (command !in commandMainMenu) {
-            getCommand(Text.REQUEST_1, Text.MISTAKE_1, commandMainMenu)
-        }
-        mainMenu(command)
+        mainMenu(getCommand(Text.ENTER_COMMAND_MESSAGE_1, Text.MESSAGE_IN_CASE_OF_ERROR_1, commandMainMenu))
     }
 
     private fun goToCoffeeMenu() {
-        command = " "
-        while (command !in commandCoffeeMenu) {
-            getCommand(Text.REQUEST_2, Text.MISTAKE_2, commandCoffeeMenu)
-        }
+        val command = getCommand(Text.ENTER_COMMAND_MESSAGE_2, Text.MESSAGE_IN_CASE_OF_ERROR_2, commandCoffeeMenu)
         if (command == "назад") {
             goToMainMenu()
         } else {
@@ -111,21 +111,23 @@ class CoffeeMachine {
             "капучино" -> Coffee.CAPPUCCINO
             else -> Coffee.LATTE
         }
-        val condition1: Boolean = newPortion.waterForPortion <= water
-        val condition2: Boolean = newPortion.milkForPortion <= milk
-        val condition3: Boolean = newPortion.beansForPortion <= beans
-        if (condition1 && condition2 && condition3) {
+        if (newPortion.waterForPortion > water) {
+            println("Недостаточно воды!")
+            goToMainMenu()
+        }
+        if (newPortion.milkForPortion > milk) {
+            println("Недостаточно молока!")
+            goToMainMenu()
+        }
+        if (newPortion.beansForPortion > beans) {
+            println("Недостаточно кофе!")
+            goToMainMenu()
+        }
             water -= newPortion.waterForPortion
             milk -= newPortion.milkForPortion
             beans -= newPortion.beansForPortion
             println("${newPortion.coffeeName} готов")
-            goToCoffeeMenu()
-        } else {
-            if (!condition1) println("Недостаточно воды!")
-            if (!condition2) println("Недостаточно молока!")
-            if (!condition3) println("Недостаточно кофе!")
-            goToCoffeeMenu()
-        }
+            goToMainMenu()
     }
 
     fun start() {
