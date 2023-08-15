@@ -6,29 +6,34 @@ class CoffeeMachine {
     private var water: Int = 0
     private var milk: Int = 0
     private var beans: Int = 0
-    private var scanner = Scanner (System.`in`)
+    private var scanner = Scanner(System.`in`)
+    private var command = " "
 
-    enum class Text (val text: String) {
-        ENTER_COMMAND_MESSAGE_1("Введите команду"),
-        MESSAGE_IN_CASE_OF_ERROR_1("Ошибка. Введите корректную команду"),
-        ENTER_COMMAND_MESSAGE_2("Введите название напитка или \"назад\" для возврата в главное меню"),
-        MESSAGE_IN_CASE_OF_ERROR_2("Рецепт не найден!");
+    private fun mainMenu() {
+        while (true) {
+            command = " "
+            println("Введите команду")
+            command = scanner.nextLine()
+
+            when(command.lowercase()) {
+                "выключить" -> {
+                    println("До свидания!")
+                    exitProcess(0)
+                }
+                "наполнить" -> {
+                    water = 2000
+                    milk = 1000
+                    beans = 500
+                    println("Ингредиенты пополнены")
+                }
+                "статус" -> println("Ингредиентов осталось: \n$water мл воды\n$milk мл молока\n$beans гр кофе")
+                "кофе" -> {
+                    makeCoffee()
+                }
+                else -> println("Ошибка. Введите корректную команду")
+            }
+        }
     }
-
-    private val commandMainMenu = listOf(
-        "выключить",
-        "наполнить",
-        "статус",
-        "кофе"
-    )
-    private val commandCoffeeMenu = listOf(
-        "эспрессо",
-        "американо",
-        "капучино",
-        "латте",
-        "назад"
-    )
-
 
     enum class Coffee(
         val coffeeName: String,
@@ -46,93 +51,44 @@ class CoffeeMachine {
         }
     }
 
-    private fun getCommand(
-        enterCommandMessage: Text,
-        messageInCaseOfError: Text,
-        commandMenu: List<String>
-    ): String {
-        var command = " "
-        while (command !in commandMenu) {
-                println(enterCommandMessage.text) //запрос ввода
-                scanner = Scanner(System.`in`) //считываем ввод
-                if (scanner.hasNextLine()) { //если это строка
-                    command = (scanner.next()).lowercase() //присваиваем ее значение переменной
-                    if (command !in commandMenu) { //проверяем, есть ли такая команда
-                    println(messageInCaseOfError.text) //если нет - сообщение об ошибке и продолжаем цикл
-                    } //если есть, выходим из цикла while
-                } else { //если не строка - выводим ошибку и продолжаем цикл
-                    println(messageInCaseOfError.text)
-                }
-        }
-        return command //возвращаем команду
-    }
-
-    private fun goToMainMenu() {
-        mainMenu(getCommand(Text.ENTER_COMMAND_MESSAGE_1, Text.MESSAGE_IN_CASE_OF_ERROR_1, commandMainMenu))
-    }
-
-    private fun goToCoffeeMenu() {
-        val command = getCommand(Text.ENTER_COMMAND_MESSAGE_2, Text.MESSAGE_IN_CASE_OF_ERROR_2, commandCoffeeMenu)
-        if (command == "назад") {
-            goToMainMenu()
-        } else {
-            makeCoffee(command)
-        }
-    }
-
-    private fun mainMenu(command: String) {
-        when (command) {
-            "выключить" -> {
-                println("До свидания!")
-                exitProcess(0)
-            }
-
-            "наполнить" -> {
-                water = 2000
-                milk = 1000
-                beans = 500
-                println("Ингредиенты пополнены")
-                goToMainMenu()
-            }
-
-            "статус" -> {
-                println("Ингредиентов осталось: \n$water мл воды\n$milk мл молока\n$beans гр кофе")
-                goToMainMenu()
-            }
-
-            "кофе" -> goToCoffeeMenu()
-        }
-    }
-
-    private fun makeCoffee(command: String) {
+    private fun makeCoffee() {
+        command = " "
+        println("Введите название напитка или \"назад\" для возврата в главное меню")
+        command = scanner.nextLine().lowercase()
         val newPortion = when (command) {
             "эспрессо" -> Coffee.ESPRESSO
             "американо" -> Coffee.AMERICANO
             "капучино" -> Coffee.CAPPUCCINO
-            else -> Coffee.LATTE
+            "латте" -> Coffee.LATTE
+            else -> null
         }
-        if (newPortion.waterForPortion > water) {
+        if (newPortion == null) {
+            println("Рецепт не найден!")
+            mainMenu()
+        }
+        if (newPortion!!.waterForPortion > water) {
             println("Недостаточно воды!")
-            goToMainMenu()
+            mainMenu()
         }
         if (newPortion.milkForPortion > milk) {
             println("Недостаточно молока!")
-            goToMainMenu()
+            mainMenu()
         }
         if (newPortion.beansForPortion > beans) {
             println("Недостаточно кофе!")
-            goToMainMenu()
+            mainMenu()
         }
-            water -= newPortion.waterForPortion
-            milk -= newPortion.milkForPortion
-            beans -= newPortion.beansForPortion
-            println("${newPortion.coffeeName} готов")
-            goToMainMenu()
+        water -= newPortion.waterForPortion
+        milk -= newPortion.milkForPortion
+        beans -= newPortion.beansForPortion
+        println("${newPortion.coffeeName} готов")
+        mainMenu()
     }
+
 
     fun start() {
         println("Кофемашина готова к работе")
-        goToMainMenu()
+        mainMenu()
     }
 }
 
